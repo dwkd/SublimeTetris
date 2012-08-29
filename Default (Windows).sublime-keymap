@@ -1,0 +1,14 @@
+[
+	{
+		"keys" : ["ctrl+down"], "command" : "play", "args" : { "direction" : "down" }
+	},
+	{
+		"keys" : ["ctrl+up"], "command" : "play", "args" : { "direction" : "up" }
+	},
+	{
+		"keys" : ["ctrl+left"], "command" : "play", "args" : { "direction" : "left" }
+	},
+	{
+		"keys" : ["ctrl+right"], "command" : "play", "args" : { "direction" : "right" }
+	}
+]
