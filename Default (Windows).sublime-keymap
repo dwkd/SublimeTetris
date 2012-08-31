@@ -10,5 +10,8 @@
 	},
 	{
 		"keys" : ["alt+right"], "command" : "play", "args" : { "direction" : "right" }
+	},
+	{
+		"keys" : ["alt+shift+n"], "command" : "play", "args" : { "gamestate" : 0, "reset" : 1 }
 	}
 ]
