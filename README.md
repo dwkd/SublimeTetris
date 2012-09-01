@@ -2,13 +2,14 @@ SublimePlay
 ==========================
 Experimenting with SublimeTeTris<br />
 Only 1 block/shape available at this time<br />
-Only 5 blocks spawned per game.<br />
+Only 5 shapes spawned per game. (Experimental stage)<br /> 
 
 How to play
 ============
 Open the playground file and click into it to see cursor<br /><br />
 
 SHIFT+ALT+N to start a new game<br />
+ALT + UP to rotate shape<br />
 ALT + DOWN to move down<br />
 ALT + LEFT to move left<br />
 ALT + RIGHT to move right<br />

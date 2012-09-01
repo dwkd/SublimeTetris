@@ -8,27 +8,37 @@
                                                                                                     
                                                                                                     
                                                                                                     
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-                                                                                                    
-----------------------------------------------------------------------------------------------------
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+                        |                                                                           
+------------------------|                                                                           
 
+KEYS:
+=====
+ALT + SHIFT + N = New Game
+ALT + UP  = rotate shape
+ALT + DOWN  = move shape down
+ALT + LEFT  = move shape left
+ALT + RIGHT  = move shape right
+
+DO NOT DELETE
+=============
 cx=19
-cy=23
+cy=28
