@@ -1,6 +1,6 @@
-SublimePlay
+SublimeTetris
 ==========================
-Experimenting with SublimeTeTris<br />
+Experimenting with SublimeTetris<br />
 Only 1 block/shape available at this time<br />
 Only 5 shapes spawned per game. (Experimental stage)<br /> 
 
