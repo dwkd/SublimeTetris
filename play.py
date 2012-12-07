@@ -2,7 +2,7 @@ import sublime, sublime_plugin
 from threading import Timer
 import threading
 
-atshape = "line-vertical"
+atshape = "non-rotated"
 baseline = 0
 forceshapelimit = 5
 game = 0
@@ -11,6 +11,7 @@ shapeheight = 0
 shapewidth = 0
 solidifiedRegions = []
 text = []
+shapeDetails = {}
 
 class playCommand(sublime_plugin.TextCommand):
 
@@ -55,7 +56,7 @@ class playCommand(sublime_plugin.TextCommand):
 		self.view.replace(edit, self.view.find("cx\=[\d]*", 0), "cx="+str(x1))
 		self.view.replace(edit, self.view.find("cy\=[\d]*", 0), "cy="+str(y1))
 		
-		x = self.getLineCoords(x1,y1)
+		x = self.buildShape_BAR(x1,y1)
 		a = self.view.find_all(" ")
 		b = [] 
 		i = 0;
@@ -65,28 +66,50 @@ class playCommand(sublime_plugin.TextCommand):
 			i += 1
 		self.view.add_regions("player1", b, "source", sublime.DRAW_OUTLINED)
 		
-	def getLineCoords(self, x, y):
+	def buildShape_BAR(self, x, y):
 		i = 0
-		z = []
-		global atshape
+		z = []		
+		
 		global shapeheight
 		global shapewidth
+		global shapeDetails
+
+
+		# shapeDetails should contain the following info about the shape
+		# at pos 1: the shape's max height
+		# at pos 2: the shape's max width
+		# at pos 3: all possible rotation states of the shape
+		# at pos 3: current rotation state of the shape state
+
+		if not len(shapeDetails):		
+			print "shape is built"
+			shapeDetails = {
+			"maxPossibleShapeHeight" : 6,
+			"maxPossibleShapeWidth" : 6,
+			"allPossibleRotations" : ["non-rotated","rotated-90"],
+			"currentRotation" : "non-rotated"
+			}
+
 		if y > 0:
-			if atshape == "line-vertical":
+			if str(shapeDetails["currentRotation"]) == "non-rotated":
 				shapeheight = 6
 				shapewidth = 1
 				while i <= 5:
 					z.append("("+str((y+1)*100+y+x)+", "+str((y+1)*100+y+x+1)+")")
 					i += 1
 					y += 1
-			elif atshape == "line-horizontal":
+			elif str(shapeDetails["currentRotation"]) == "rotated-90":
 				shapeheight = 1
 				shapewidth = 6
 				while i <= 5:
 					z.append("("+str((y+1)*100+y+x)+", "+str((y+1)*100+y+x+1)+")")
 					i += 1
 					x += 1
+		#print shapeDetails
+
 		return z
+
+
 
 	def descend(self):
 		global baseline
@@ -111,13 +134,18 @@ class playCommand(sublime_plugin.TextCommand):
 		self.view.add_regions("solidifiedplayer1", solidifiedRegions, "source", sublime.DRAW_EMPTY)
 
 	def rotate(self):
-		global atshape
-		global baseline
-		global shapeheight
-		if atshape == "line-vertical":
-			atshape = "line-horizontal"
-		elif atshape == "line-horizontal" and baseline < 23:
-			atshape = "line-vertical"
+
+		global shapeDetails	
+
+		for rotatePosition in shapeDetails["allPossibleRotations"]:
+			if shapeDetails["currentRotation"] == rotatePosition:
+				if shapeDetails["allPossibleRotations"].index(shapeDetails["currentRotation"]) == (len(shapeDetails["allPossibleRotations"])-1):
+					shapeDetails["currentRotation"] = shapeDetails["allPossibleRotations"][0] 
+				else:
+					shapeDetails["currentRotation"] = shapeDetails["allPossibleRotations"][(shapeDetails["allPossibleRotations"].index(shapeDetails["currentRotation"])+1)]
+					break
+					
+				
 
 	def gameover(self):
 		global text
@@ -155,7 +183,6 @@ class playCommand(sublime_plugin.TextCommand):
 			#O ["(36, 37)","(37, 38)","(38, 39)","(39, 40)","(140, 141)","(241, 242)","(342, 343)","(443, 444)","(442, 443)","(441, 442)","(440, 441)","(339, 340)","(238, 239)","(137, 138)"]
 			text += ["("+str(p)+", "+str(p+1)+")","("+str(p+1)+", "+str(p+2)+")","("+str(p+2)+", "+str(p+3)+")","("+str(p+3)+", "+str(p+4)+")","("+str(p+104)+", "+str(p+105)+")","("+str(p+205)+", "+str(p+206)+")","("+str(p+306)+", "+str(p+307)+")","("+str(p+407)+", "+str(p+408)+")","("+str(p+406)+", "+str(p+407)+")","("+str(p+405)+", "+str(p+406)+")","("+str(p+404)+", "+str(p+405)+")","("+str(p+303)+", "+str(p+304)+")","("+str(p+202)+", "+str(p+203)+")","("+str(p+101)+", "+str(p+102)+")"]
 		if letter == "V":
-			print "here"
 			#V ["(41, 42)","(142, 143)","(243, 244)","(345, 346)","(447, 448)","(347, 348)","(247, 248)","(146, 147)","(45, 46)"]
 			text += ["("+str(p)+", "+str(p+1)+")","("+str(p+101)+", "+str(p+102)+")","("+str(p+202)+", "+str(p+203)+")","("+str(p+304)+", "+str(p+305)+")","("+str(p+406)+", "+str(p+407)+")","("+str(p+306)+", "+str(p+307)+")","("+str(p+206)+", "+str(p+207)+")","("+str(p+105)+", "+str(p+106)+")","("+str(p+4)+", "+str(p+5)+")"]
 		if letter == "R":
