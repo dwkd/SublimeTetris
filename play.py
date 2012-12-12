@@ -4,7 +4,7 @@ import threading
 
 atshape = "non-rotated"
 baseline = 0
-forceshapelimit = 5
+forceshapelimit = 3
 game = 0
 maxshapes = 0
 shapeheight = 0
@@ -12,6 +12,11 @@ shapewidth = 0
 solidifiedRegions = []
 text = []
 shapeDetails = {}
+
+
+illegalMove = 0
+forceSolidify = 0
+
 
 class playCommand(sublime_plugin.TextCommand):
 
@@ -43,20 +48,25 @@ class playCommand(sublime_plugin.TextCommand):
 			self.write("O", 2581)
 			self.write("N", 2586)
 
-
-		if direction == "down" and y1 < (29-shapeheight):
-			y1 += 1
-		elif direction == "up" and y1 > 1:
-			self.rotate()
-		elif direction == "left" and x1 > 1:
-			x1 -= 1
-		elif direction == "right" and x1 < (25-shapewidth):
-			x1 += 1
+		isMoveIllegal = self.buildShape_BAR(x1,y1,direction,1)
+		print isMoveIllegal
+		if isMoveIllegal == 0:
+			if direction == "down" and y1 < (29-shapeheight):
+				y1 += 1
+			elif direction == "up" and y1 > 1:
+				self.rotate()
+			elif direction == "left" and x1 > 1:
+				x1 -= 1
+			elif direction == "right" and x1 < (25-shapewidth):
+				x1 += 1
+		else:
+			if y1 < (29-shapeheight):
+				y1 += 1
 
 		self.view.replace(edit, self.view.find("cx\=[\d]*", 0), "cx="+str(x1))
 		self.view.replace(edit, self.view.find("cy\=[\d]*", 0), "cy="+str(y1))
 		
-		x = self.buildShape_BAR(x1,y1)
+		x = self.buildShape_BAR(x1,y1,direction)
 		a = self.view.find_all(" ")
 		b = [] 
 		i = 0;
@@ -66,13 +76,21 @@ class playCommand(sublime_plugin.TextCommand):
 			i += 1
 		self.view.add_regions("player1", b, "source", sublime.DRAW_OUTLINED)
 		
-	def buildShape_BAR(self, x, y):
+	def buildShape_BAR(self, x, y, direction, checkMoveValidity=0):
 		i = 0
-		z = []		
+		z = []
+		recalcZ = 0
+		storeXY = [x,y]
 		
 		global shapeheight
 		global shapewidth
 		global shapeDetails
+		global maxshapes		
+		global forceshapelimit
+		global forceSolidify
+		global illegalMove
+
+		illegalMove = 0
 
 
 		# shapeDetails should contain the following info about the shape
@@ -87,8 +105,10 @@ class playCommand(sublime_plugin.TextCommand):
 			"maxPossibleShapeHeight" : 6,
 			"maxPossibleShapeWidth" : 6,
 			"allPossibleRotations" : ["non-rotated","rotated-90"],
-			"currentRotation" : "non-rotated"
+			"currentRotation" : "non-rotated",
+			"shapeRegions" : []
 			}
+
 
 		if y > 0:
 			if str(shapeDetails["currentRotation"]) == "non-rotated":
@@ -98,6 +118,7 @@ class playCommand(sublime_plugin.TextCommand):
 					z.append("("+str((y+1)*100+y+x)+", "+str((y+1)*100+y+x+1)+")")
 					i += 1
 					y += 1
+
 			elif str(shapeDetails["currentRotation"]) == "rotated-90":
 				shapeheight = 1
 				shapewidth = 6
@@ -105,9 +126,30 @@ class playCommand(sublime_plugin.TextCommand):
 					z.append("("+str((y+1)*100+y+x)+", "+str((y+1)*100+y+x+1)+")")
 					i += 1
 					x += 1
-		#print shapeDetails
 
-		return z
+		for shapeDotRegion in z:
+			for solidifiedRegion in self.view.get_regions("solidifiedplayer1"):
+				#print str(solidifiedRegion) + " == "+ str(shapeDotRegion)
+				if str(solidifiedRegion) == str(shapeDotRegion):
+					illegalMove = 1
+					break
+
+
+		if checkMoveValidity == 0:
+			if illegalMove == 1:
+				if direction == "down":
+					forceSolidify = 1
+
+		shapeDetails["shapeRegions"] = z 
+
+
+		#if len(self.view.get_regions("solidifiedplayer1")):
+		#	print str(max(self.view.get_regions("solidifiedplayer1")))
+		#print z
+		if checkMoveValidity == 1:
+			return illegalMove
+		else:
+			return z
 
 
 
@@ -116,17 +158,23 @@ class playCommand(sublime_plugin.TextCommand):
 		global maxshapes
 		global shapeheight
 		global forceshapelimit
+		global forceSolidify
+
 		self.view.run_command("play",{"direction" : "down"})
 		#print "descending"
-		if baseline < (29-shapeheight):			
-			sublime.set_timeout(self.descend, 1000)
-		elif baseline == (29-shapeheight):
+		if baseline < (29-shapeheight) and forceSolidify == 0:
+			sublime.set_timeout(self.descend, 2000)
+		else:			
+			forceSolidify = 0
 			self.solidify()
 			maxshapes +=1
 			if maxshapes < forceshapelimit:
 				self.view.run_command("play",{"gamestate":0})
 			else:
 				self.gameover()
+		
+
+
 
 	def solidify(self):
 		global solidifiedRegions
