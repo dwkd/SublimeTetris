@@ -2,105 +2,135 @@ import sublime, sublime_plugin
 from threading import Timer
 import threading
 
+### set global variables
+
 atshape = "non-rotated"
 baseline = 0
-forceshapelimit = 3
+forceshapelimit = 5
 game = 0
-maxshapes = 0
+shapesPlayed = 0
 shapeheight = 0
 shapewidth = 0
 solidifiedRegions = []
 text = []
 shapeDetails = {}
-
+gameOver = 0
 
 illegalMove = 0
 forceSolidify = 0
 
 
+
+
 class playCommand(sublime_plugin.TextCommand):
 
-	def run(self, edit, direction="down", gamestate=1, reset=0):
+	### gamestates:
+	###
+	### 0 : new game
+	### 1 : game running
 
+
+	def run(self, edit, direction="down", gamestate=1, reset=0):
+		
+		global gameOver
+
+		### reset game
 		if reset==1:
 			self.view.run_command("reset")
 
-		global baseline
-		global shapeheight
-		global shapewidth
+		### only do stuff if game is not over
+		if gameOver == 0:	
+		
+			### get global variables
+			global baseline
+			global shapeheight
+			global shapewidth
+			global forceSolidify
 
-		x1 = int(self.view.substr(self.view.find("(?<=cx\=)[\d]*", 0)))
-		y1 = int(self.view.substr(self.view.find("(?<=cy\=)[\d]*", 0)))
+			x1 = int(self.view.substr(self.view.find("(?<=cx\=)[\d]*", 0)))
+			y1 = int(self.view.substr(self.view.find("(?<=cy\=)[\d]*", 0)))
 
-		baseline = y1
+			baseline = y1
 
-		if gamestate==0:
-			#game started
-			global game
-			game = 1
-			x1 = 1
-			y1 = 1
-			sublime.set_timeout(self.descend, 2000)
-			self.write("G", 2555)
-			self.write("A", 2560)
-			self.write("M", 2565)
-			self.write("E", 2571)
-			self.write("O", 2581)
-			self.write("N", 2586)
+			### start new game 
+			if gamestate==0:
+				#game started
+				global game
+				game = 1
+				x1 = 1
+				y1 = 1
+				sublime.set_timeout(self.descend, 2000)
+				self.write("G", 2555)
+				self.write("A", 2560)
+				self.write("M", 2565)
+				self.write("E", 2571)
+				self.write("O", 2581)
+				self.write("N", 2586)
 
-		isMoveIllegal = self.buildShape_BAR(x1,y1,direction,1)
-		print isMoveIllegal
-		if isMoveIllegal == 0:
+
+			### do a test run to see if next move is illegal
 			if direction == "down" and y1 < (29-shapeheight):
-				y1 += 1
-			elif direction == "up" and y1 > 1:
-				self.rotate()
+			 	y1 += 1
+			# elif direction == "up" and y1 > 1:
+			# 	self.rotate()
 			elif direction == "left" and x1 > 1:
 				x1 -= 1
 			elif direction == "right" and x1 < (25-shapewidth):
 				x1 += 1
-		else:
-			if y1 < (29-shapeheight):
-				y1 += 1
 
-		self.view.replace(edit, self.view.find("cx\=[\d]*", 0), "cx="+str(x1))
-		self.view.replace(edit, self.view.find("cy\=[\d]*", 0), "cy="+str(y1))
-		
-		x = self.buildShape_BAR(x1,y1,direction)
-		a = self.view.find_all(" ")
-		b = [] 
-		i = 0;
-		for g in a:
-			if str(g) in x:
-				b.append(g)
-			i += 1
-		self.view.add_regions("player1", b, "source", sublime.DRAW_OUTLINED)
-		
+			isMoveIllegal = self.buildShape_BAR(x1,y1,direction,1)		
+			print direction + " " + str(isMoveIllegal)
+
+			### revert x and y to prepare for actual move
+			if gamestate == 0:
+				x1 = 1
+				y1 = 1
+			else:
+				x1 = int(self.view.substr(self.view.find("(?<=cx\=)[\d]*", 0)))
+				y1 = int(self.view.substr(self.view.find("(?<=cy\=)[\d]*", 0)))
+
+			### do the actual move the previous validity came back positive
+			if isMoveIllegal == 0:
+				if direction == "down" and y1 < (29-shapeheight):
+					y1 += 1
+				elif direction == "up" and y1 > 1:
+					self.rotate()
+				elif direction == "left" and x1 > 1:
+					x1 -= 1
+				elif direction == "right" and x1 < (25-shapewidth):
+					x1 += 1
+
+
+				self.view.replace(edit, self.view.find("cx\=[\d]*", 0), "cx="+str(x1))
+				self.view.replace(edit, self.view.find("cy\=[\d]*", 0), "cy="+str(y1))
+				
+				x = self.buildShape_BAR(x1,y1,direction)
+				a = self.view.find_all(" ")
+				b = [] 
+				i = 0;
+				for g in a:
+					if str(g) in x:
+						b.append(g)
+					i += 1
+				self.view.add_regions("player1", b, "source", sublime.DRAW_OUTLINED)
+			elif isMoveIllegal == 1 and direction == "down":
+				forceSolidify = 1
+			
 	def buildShape_BAR(self, x, y, direction, checkMoveValidity=0):
-		i = 0
-		z = []
-		recalcZ = 0
-		storeXY = [x,y]
-		
+
 		global shapeheight
 		global shapewidth
-		global shapeDetails
-		global maxshapes		
+		global shapeDetails	
 		global forceshapelimit
 		global forceSolidify
 		global illegalMove
 
+		i = 0
+		z = []
 		illegalMove = 0
 
-
-		# shapeDetails should contain the following info about the shape
-		# at pos 1: the shape's max height
-		# at pos 2: the shape's max width
-		# at pos 3: all possible rotation states of the shape
-		# at pos 3: current rotation state of the shape state
-
-		if not len(shapeDetails):		
-			print "shape is built"
+		if not len(shapeDetails):	
+			### build shape if new 
 			shapeDetails = {
 			"maxPossibleShapeHeight" : 6,
 			"maxPossibleShapeWidth" : 6,
@@ -108,8 +138,7 @@ class playCommand(sublime_plugin.TextCommand):
 			"currentRotation" : "non-rotated",
 			"shapeRegions" : []
 			}
-
-
+		### build new shape
 		if y > 0:
 			if str(shapeDetails["currentRotation"]) == "non-rotated":
 				shapeheight = 6
@@ -135,19 +164,16 @@ class playCommand(sublime_plugin.TextCommand):
 					break
 
 
-		if checkMoveValidity == 0:
-			if illegalMove == 1:
-				if direction == "down":
-					forceSolidify = 1
+		if checkMoveValidity == 0 and illegalMove == 1 and direction == "down":
+			forceSolidify = 1
 
+		### store regions the shape is currently occupying
 		shapeDetails["shapeRegions"] = z 
 
-
-		#if len(self.view.get_regions("solidifiedplayer1")):
-		#	print str(max(self.view.get_regions("solidifiedplayer1")))
-		#print z
+		### if it's a validity check return is valid or not
 		if checkMoveValidity == 1:
 			return illegalMove
+		### otherwise return new shape
 		else:
 			return z
 
@@ -155,10 +181,11 @@ class playCommand(sublime_plugin.TextCommand):
 
 	def descend(self):
 		global baseline
-		global maxshapes
+		global shapesPlayed
 		global shapeheight
 		global forceshapelimit
-		global forceSolidify
+		global forceSolidify		
+		global gameOver
 
 		self.view.run_command("play",{"direction" : "down"})
 		#print "descending"
@@ -167,11 +194,12 @@ class playCommand(sublime_plugin.TextCommand):
 		else:			
 			forceSolidify = 0
 			self.solidify()
-			maxshapes +=1
-			if maxshapes < forceshapelimit:
+			shapesPlayed +=1
+			if shapesPlayed < forceshapelimit:
 				self.view.run_command("play",{"gamestate":0})
-			else:
+			else:				
 				self.gameover()
+				gameOver = 1
 		
 
 
@@ -245,10 +273,13 @@ class playCommand(sublime_plugin.TextCommand):
 class resetCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		global solidifiedRegions
-		global maxshapes
+		global shapesPlayed
 		global text
+		global gameOver
+
 		text = []
 		solidifiedRegions = []
-		maxshapes = 0
+		shapesPlayed = 0
+		gameOver = 0
 		self.view.erase_regions("solidifiedplayer1")
 		self.view.erase_regions("gameoverregion")
