@@ -8,15 +8,15 @@ Installing
 ============
 1. Download the project from github. (Press the Zip button.)
 2. Open the downloaded zip file.
-3. Select and copy the folder dwkd-SublitmeTetris
+3. Select and copy the folder SublimeTetris-master
 4. Open Sublime Text Editor
 5. Under the Preferences menu, press Browse Packages....
-6. Paste the folder dwkd-SublitmeTetris to the Packages directory.
+6. Paste the folder SublimeTetris-master to the Packages directory.
 7. Restart Sublime
 
 How to play
 ============
-Open the Packages/dwkd-SublitmeTetris/playground file and click into it to see cursor<br /><br />
+Open the Packages/SublimeTetris-master/playground file and click into it to see cursor<br /><br />
 
 SHIFT+ALT+N to start a new game<br />
 ALT + UP to rotate shape<br />
