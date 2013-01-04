@@ -4,9 +4,19 @@ Experimenting with SublimeTetris<br />
 Only 1 block/shape available at this time<br />
 Only 5 shapes spawned per game. (Experimental stage)<br /> 
 
+Installing
+============
+1. Download the project from github. (Press the Zip button.)
+2. Open the downloaded zip file.
+3. Select and copy the folder dwkd-SublitmeTetris
+4. Open Sublime Text Editor
+5. Under the Preferences menu, press Browse Packages....
+6. Paste the folder dwkd-SublitmeTetris to the Packages directory.
+7. Restart Sublime
+
 How to play
 ============
-Open the playground file and click into it to see cursor<br /><br />
+Open the Packages/dwkd-SublitmeTetris/playground file and click into it to see cursor<br /><br />
 
 SHIFT+ALT+N to start a new game<br />
 ALT + UP to rotate shape<br />
